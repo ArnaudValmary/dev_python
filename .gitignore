@@ -1,6 +1,2 @@
 *.lock
-*.zip
-*.csv
-*.svg
-*.png
 **/tmp

@@ -258,7 +258,7 @@ dir_name: str = "yo"
 zip_buffer: Any = create_zip_files(csv_files, internal_dir_name=dir_name)
 
 # Check result with a real file
-zip_name: str = 'test.zip'
+zip_name: str = './tmp/test.zip'
 with open(zip_name, mode='bw') as zip_file:
     zip_file.write(zip_buffer)
     zip_file.close()
