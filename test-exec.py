@@ -93,7 +93,7 @@ exec_return_dict: Dict[str, Any] = exec_command(cmd_gv_svg,
 print("output=<%s>" % json.dumps(exec_return_dict, indent=2))
 
 print("write svg file")
-exec_return_dict: Dict[str, Any] = exec_command('cat > ./gv/helloworld.svg',
+exec_return_dict: Dict[str, Any] = exec_command('cat > ./tmp/helloworld.svg',
                                                 stdin=exec_return_dict.get('stdout', ''),
                                                 convert_stdout_to_string=True)
 print("output=<%s>" % json.dumps(exec_return_dict, indent=2))
@@ -105,7 +105,7 @@ exec_return_dict: Dict[str, Any] = exec_command(cmd_gv_png,
 # print("output=<%s>" % json.dumps(exec_return_dict, indent=2))
 
 print("write png file")
-exec_return_dict: Dict[str, Any] = exec_command('cat > ./gv/helloworld.png',
+exec_return_dict: Dict[str, Any] = exec_command('cat > ./tmp/helloworld.png',
                                                 stdin=exec_return_dict.get('stdout', ''),
                                                 convert_stdout_to_string=True)
 print("output=<%s>" % json.dumps(exec_return_dict, indent=2))

@@ -4,7 +4,7 @@
 """
 
 import json
-from typing import Any, List
+from typing import Any, List, Union
 
 
 class my_dict(dict):
@@ -18,19 +18,20 @@ class my_dict(dict):
         return sorted(self.keys(), key=int, *args, **kw)
 
     def get_depth(self,
-                  f: List[Any] = None,
-                  p: str = None,
+                  f: Union[List[str], str] = None,
                   s: str = '.',
                   d: str = None
                   ) -> Any:
+        fields: List[str] = []
         if f is None or not f:
-            if p is None or not p:
-                return d
-            else:
-                f: List[Any] = p.split(s)
-        len_fields_minus_1: int = len(f) - 1
+            return d
+        elif isinstance(fields, str):
+            fields = f.split(s)
+        elif isinstance(fields, list):
+            fields = f
+        len_fields_minus_1: int = len(fields) - 1
         d: Any = self
-        for i, field in enumerate(f):
+        for i, field in enumerate(fields):
             if isinstance(d, dict) and field in d:
                 if i < len_fields_minus_1:
                     d = d[field]
@@ -40,20 +41,21 @@ class my_dict(dict):
                 return d
 
     def set_depth(self,
-                  f: List[str] = None,
-                  p: str = None,
+                  f: Union[List[str], str] = None,
                   s: str = '.',
                   v: Any = None
                   ) -> Any:
+        fields: List[str] = []
         if f is None or not f:
-            if p is None or not p:
-                return self
-            else:
-                f: List[str] = p.split(s)
-        field: str = f[0]
-        len_fields_minus_1: int = len(f) - 1
+            return self
+        elif isinstance(fields, str):
+            fields = f.split(s)
+        elif isinstance(fields, list):
+            fields = f
+        field: str = fields[0]
+        len_fields_minus_1: int = len(fields) - 1
         d: Any = self
-        for i, field in enumerate(f):
+        for i, field in enumerate(fields):
             if i < len_fields_minus_1:
                 if not isinstance(d, dict) or field not in d:
                     d[field] = {}
@@ -103,9 +105,10 @@ d.set_depth(["one"], v="the one second")
 d.set_depth([1, 2, 3], v="o t t")
 print("%s" % d)
 
-d > "x.json"
-# d >= "x.json"
+d > "./tmp/x.json"
 
 e = my_dict()
-e < "x.json"
+e < "./tmp/x.json"
 print("<%s>" % e)
+
+d >= "./tmp/x.json"
