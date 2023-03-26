@@ -1,3 +1,5 @@
 *.lock
 *.zip
 *.csv
+*.svg
+*.png
