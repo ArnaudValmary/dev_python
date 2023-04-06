@@ -1,2 +1,3 @@
 *.lock
 **/tmp
+**/.pytest_cache

@@ -4,20 +4,6 @@
 
 import subprocess
 from typing import Any, Dict, Union
-import json
-
-gv_input = """
-digraph G {
-    Hello -> World
-}
-"""
-
-gv_output_format_svg: str = "svg"
-gv_output_format_png: str = "png"
-input_filename: str = 'gv/hello-world.gv'
-
-cmd_gv_svg: str = "dot -T%s" % gv_output_format_svg
-cmd_gv_png: str = "dot -T%s" % gv_output_format_png
 
 
 def exec_command(cmd: str,
@@ -84,46 +70,3 @@ def exec_command(cmd: str,
         'stderr_is_string': convert_stderr_to_string,
         'stderr': err_bytes,
     }
-
-
-print("gv -> svg")
-exec_return_dict: Dict[str, Any] = exec_command(cmd_gv_svg,
-                                                stdin=gv_input,
-                                                convert_stdout_to_string=True)
-print("output=<%s>" % json.dumps(exec_return_dict, indent=2))
-
-print("write svg file")
-exec_return_dict: Dict[str, Any] = exec_command('cat > ./tmp/helloworld.svg',
-                                                stdin=exec_return_dict.get('stdout', ''),
-                                                convert_stdout_to_string=True)
-print("output=<%s>" % json.dumps(exec_return_dict, indent=2))
-
-print("gv -> png")
-exec_return_dict: Dict[str, Any] = exec_command(cmd_gv_png,
-                                                stdin=gv_input)
-# json.dumps is not compatible with bytes type
-# print("output=<%s>" % json.dumps(exec_return_dict, indent=2))
-
-print("write png file")
-exec_return_dict: Dict[str, Any] = exec_command('cat > ./tmp/helloworld.png',
-                                                stdin=exec_return_dict.get('stdout', ''),
-                                                convert_stdout_to_string=True)
-print("output=<%s>" % json.dumps(exec_return_dict, indent=2))
-
-print("unknow command without shell")
-exec_return_dict: Dict[str, Any] = exec_command('faulty_ls',
-                                                convert_stdout_to_string=True,
-                                                shell=False)
-print("output=<%s>" % json.dumps(exec_return_dict, indent=2))
-
-print("good command without shell")
-exec_return_dict: Dict[str, Any] = exec_command('/usr/bin/ls',
-                                                convert_stdout_to_string=True,
-                                                shell=False)
-print("output=<%s>" % json.dumps(exec_return_dict, indent=2))
-
-print("command too long")
-exec_return_dict: Dict[str, Any] = exec_command('sleep 10',
-                                                convert_stdout_to_string=True,
-                                                timeout_seconds=1)
-print("output=<%s>" % json.dumps(exec_return_dict, indent=2))
