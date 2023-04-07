@@ -4,6 +4,7 @@
 """
 
 import json
+import re
 from typing import Any, Dict, List, Union
 from uuid import uuid4 as get_uuid
 
@@ -125,11 +126,40 @@ class mydict(dict):
         len_fields_minus_one: int = len(field_names) - 1
         c_d: Any = self
         for i, field_name in enumerate(field_names):
+            flag_list: bool = False
+            z: re.Match[str] | None = re.match(r'^(?P<field_name>[^[]+)\[(?P<list_index>-?[0-9]+)\]$', field_name)
+            if z is not None:
+                flag_list = True
+                field_name: str = z.group('field_name')
+                list_index: int = int(z.group('list_index'))
+                # print("I=<%d>" % list_index)
             if field_name in c_d:
                 if i == len_fields_minus_one:
-                    return c_d[field_name]
+                    if flag_list:
+                        if isinstance(c_d[field_name], List):
+                            # print("LIST")
+                            if (list_index >= 0 and list_index >= len(c_d[field_name])) or \
+                               (list_index < 0 and -list_index > len(c_d[field_name])):
+                                # print("  OOB")
+                                return d
+                            else:
+                                return c_d[field_name][list_index:][0]
+                        else:
+                            return d
+                    else:
+                        return c_d[field_name]
                 else:
-                    c_d = c_d[field_name]
+                    if flag_list:
+                        if isinstance(c_d[field_name], List):
+                            if (list_index >= 0 and list_index >= len(c_d[field_name])) or \
+                               (list_index < 0 and -list_index > len(c_d[field_name])):
+                                return d
+                            else:
+                                c_d = c_d[field_name][list_index:][0]
+                        else:
+                            return d
+                    else:
+                        c_d = c_d[field_name]
             else:
                 return d
 

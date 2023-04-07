@@ -60,14 +60,14 @@ def test_dict_list_2_zip() -> None:
         ]
     }
 
-    print("json(d1)=<%s>" % (json.dumps(d1, indent=2)))
-    print("json(d2)=<%s>" % (json.dumps(d2, indent=2)))
+    # print("json(d1)=<%s>" % (json.dumps(d1, indent=2)))
+    # print("json(d2)=<%s>" % (json.dumps(d2, indent=2)))
 
     # List of records
     records: List[Dict[str, Any]] = [d1, d2]
 
     csv_files: Dict[str, Dict[str, str]] = mydict.csv.create_csv_files_from_dict_list(records, "root")
-    print("json(csv_files)=<%s>" % (json.dumps(csv_files, indent=2)))
+    # print("json(csv_files)=<%s>" % (json.dumps(csv_files, indent=2)))
 
     assert csv_files
 
