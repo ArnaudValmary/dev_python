@@ -171,19 +171,26 @@ class mydict(dict):
                     break
         return self
 
-    def __gt__(self, other) -> bool:
+    def __gt__(self, other) -> None:
         if not isinstance(other, str):
             raise Exception("'%s' is not a string" % (other))
         with open(other, "w") as f:
             f.write("%s\n" % (json.dumps(self)))
 
-    def __ge__(self, other) -> bool:
+    def __rshift__(self, other) -> None:
         if not isinstance(other, str):
             raise Exception("'%s' is not a string" % (other))
         with open(other, "a") as f:
             f.write("%s\n" % (json.dumps(self)))
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other) -> None:
+        if not isinstance(other, str):
+            raise Exception("'%s' is not a string" % (other))
+        with open(other, "r") as f:
+            self.clear()
+            self.update(json.loads(f.read()))
+
+    def __lshift__(self, other) -> None:
         if not isinstance(other, str):
             raise Exception("'%s' is not a string" % (other))
         with open(other, "r") as f:
