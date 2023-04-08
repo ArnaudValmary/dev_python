@@ -1,3 +1,5 @@
 *.lock
 **/tmp
 **/.pytest_cache
+**/.coverage
+**/htmlcov
