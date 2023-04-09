@@ -2,6 +2,7 @@
 
 ## Initialization
 Site: https://pipenv.pypa.io/
+
 On PyPI: https://pypi.org/project/pipenv/
 ```bash
 pipenv install --dev
@@ -9,6 +10,7 @@ pipenv install --dev
 
 ## Tests
 Site: https://docs.pytest.org/
+
 On PyPI: https://pypi.org/project/pytest/
 
 **Run tests**
@@ -22,8 +24,10 @@ or run [script](./run_tests.sh)
 
 ## Coverage
 Site: https://coverage.readthedocs.io/
+
 On PyPI: https://pypi.org/project/coverage/
-Configuration in: [`.coveragerc`](./coveragerc) file
+
+Configuration in: [`./.coveragerc`](./coveragerc) file
 
 **Run coverage**
 Based on pytest
