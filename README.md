@@ -16,6 +16,10 @@ Run tests:
 ```bash
 PYTHONPATH=. pipenv run pytest --verbose --tb=long -r A
 ```
+or
+```bash
+./run_tests.sh
+```
 
 ## Coverage
 Site: https://coverage.readthedocs.io/
@@ -35,4 +39,8 @@ Generate HTML report and see it:
 ```
 pipenv run coverage html
 firefox htmlcov/index.html
+```
+or
+```bash
+./run_coverage.sh
 ```
