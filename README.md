@@ -27,7 +27,7 @@ Site: https://coverage.readthedocs.io/
 
 On PyPI: https://pypi.org/project/coverage/
 
-Configuration in: [`./.coveragerc`](./coveragerc) file
+Configuration in: [`.coveragerc`](./.coveragerc) file
 
 **Run coverage**
 Based on pytest
