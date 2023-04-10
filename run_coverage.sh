@@ -1,34 +1,41 @@
 #! /usr/bin/env bash
 
-. run_tests.sh
+. ./project.env
+. ./run_tests.sh
 
-declare -a coverage_run=(
-    "coverage"
-    "run"
-    "-m"
+declare -a coverage_run_with_pytest_and_build_xml_report=(
+    "pytest"
+    "--cov-config=${coveragerc_filename}"
+    "--cov-report" "xml:${coveragerc_xml_report_filename}"
 )
-coverage_run_pytest=("${coverage_run[@]}" "${pytest_run[@]}")
+for sources_dir in "${sources_dirs[@]}"; do
+    coverage_run_with_pytest_and_build_xml_report+=("--cov")
+    coverage_run_with_pytest_and_build_xml_report+=("${sources_dir}")
+done
 
-declare -a coverage_html=(
+declare -a coverage_build_html_report=(
     "coverage"
     "html"
 )
 
-run_coverage_pytest () {
-    export_pip_env
+run_coverage_and_build_xml_report () {
+    export_vars
     set -x
-    "${pipenv_run[@]}" "${coverage_run_pytest[@]}"
+    rm -f "${coveragerc_report_filename}"
+    rm -f "${coveragerc_xml_report_filename}"
+    "${pipenv_run[@]}" "${coverage_run_with_pytest_and_build_xml_report[@]}"
     set +x
 }
-run_coverage_build_html_report () {
-    export_pip_env
+run_build_coverage_html_report () {
+    export_vars
     set -x
-    "${pipenv_run[@]}" "${coverage_html[@]}"
+    rm -rf "${coveragerc_html_report_dirname}"
+    "${pipenv_run[@]}" "${coverage_build_html_report[@]}"
     set +x
 }
 
 if [[ "$(get_prog_name)" == run_coverage ]]; then
-    run_coverage_pytest
-    run_coverage_build_html_report
+    run_coverage_and_build_xml_report
+    run_build_coverage_html_report
     firefox htmlcov/index.html
 fi

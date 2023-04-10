@@ -1,3 +1,5 @@
+# This the document for pipenv configuration
+
 [[source]]
 url = "https://pypi.org/simple"
 verify_ssl = true
@@ -8,7 +10,7 @@ name = "pypi"
 [dev-packages]
 flake8 = "==6.0.0"
 pytest = "==7.2.2"
-coverage = "==7.2.3"
+pytest-cov = "4.0.0"
 
 [requires]
 python_version = "3.11"

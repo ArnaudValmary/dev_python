@@ -1,3 +1,5 @@
+# This the document for coverage configuration
+
 [run]
 omit=
     */tests/*

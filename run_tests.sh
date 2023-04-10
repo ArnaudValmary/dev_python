@@ -5,12 +5,12 @@
 declare -a pytest_run=(
     "pytest"
     "--verbose"
-    "--tb=long"
+    "--full-trace"
     "-r" "A"
 )
 
 run_test () {
-    export_pip_env
+    export_vars
     set -x
     "${pipenv_run[@]}" "${pytest_run[@]}"
     set +x
