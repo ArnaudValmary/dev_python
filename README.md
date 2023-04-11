@@ -44,7 +44,7 @@ pipenv run coverage report -m
 
 **Run coverage and generate XML report**
 ```bash
-pipenv run pytest --cov-config=./.coveragerc --cov-report xml:./coverage.xml --cov mydict --cov myexec
+pipenv run pytest --cov-config=./.coveragerc --cov-report xml:./coverage.xml --cov .
 ```
 
 **Generate HTML report and see it**

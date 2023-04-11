@@ -1,4 +1,4 @@
-# This the document for coverage configuration
+# This is the document for coverage configuration
 
 [run]
 omit=

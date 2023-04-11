@@ -1,4 +1,4 @@
-# This the document for pipenv configuration
+# This is the document for pipenv configuration
 
 [[source]]
 url = "https://pypi.org/simple"
