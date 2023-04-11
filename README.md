@@ -59,27 +59,70 @@ Run [script](./run_coverage.sh)
 ./run_coverage.sh
 ```
 
-## Visual Studio Code parameters
+## Visual Studio Code
+
+### Extensions
+* Python
+    * [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+    * [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance)
+    * [Flake8](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8)
+    * [autopep8](https://marketplace.visualstudio.com/items?itemName=ms-python.autopep8)
+    * [isort](https://marketplace.visualstudio.com/items?itemName=ms-python.isort)
+    * [Python Environment Manager](https://marketplace.visualstudio.com/items?itemName=donjayamanne.python-environment-manager)
+* Shell
+    * [ShellCheck](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck)
+* TOML
+    * [Even Better TOML](https://marketplace.visualstudio.com/items?itemName=tamasfe.even-better-toml)
+* Others
+    * [Render Line Endings](https://marketplace.visualstudio.com/items?itemName=medo64.render-crlf)
+    * [Todo Tree](https://marketplace.visualstudio.com/items?itemName=Gruntfuggly.todo-tree)
+
+### Parameters
 ```json
 {
     "files.associations": {
         "*.env": "shellscript",
         ".coveragerc": "toml"
     },
+
+    // EOL
+    "code-eol.decorateBeforeEol": true,
+    "code-eol.highlightExtraWhitespace": true,
+
+    // Python
+    "python.defaultInterpreterPath": "/usr/bin/python",
     "python.languageServer": "Pylance",
+    "python.analysis.inlayHints.variableTypes": true,
+    "python.analysis.inlayHints.functionReturnTypes": true,
+
+    // Python linting
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Args": [
+        "--max-line-length", "150",
+        "--verbose"
+    ],
+
+    // Python formatting
+    "[python]": {
+        "editor.formatOnType": true,
+        "editor.defaultFormatter": "ms-python.autopep8",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+        },
+    },
+    "isort.args": [
+        "--profile", "black"
+    ],
+
+    // ShellCheck
     "shellcheck.customArgs": [
         "-x"
     ],
-    "python.analysis.inlayHints.variableTypes": true,
-    "python.analysis.inlayHints.functionReturnTypes": true,
-    "python.linting.flake8Args": [
-        "--max-line-length",
-        "150",
-        "--verbose"
-    ],
-    "[python]": {
-        "editor.formatOnType": true
-    },
-    "python.linting.flake8Enabled": true
+
+    // TOML
+    "evenBetterToml.formatter.arrayAutoCollapse": false,
+    "evenBetterToml.formatter.allowedBlankLines": 1,
+    "evenBetterToml.formatter.columnWidth": 120
 }
 ```

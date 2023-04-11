@@ -4,10 +4,10 @@
 """
 
 import csv
-import json
+from io import BytesIO, StringIO
 from typing import Any, Dict, List
-from io import StringIO, BytesIO
 from zipfile import ZipFile
+
 import mydict
 
 
@@ -24,7 +24,10 @@ def flat_dicts(ld: List[Dict],
     fd: Dict[str, List[Dict[str, Any]]] = {}
     for elt in ld:
         md = mydict.mydict(elt)
-        md.flat(fd_key=fd_key, fd=fd, sep=sep, id_field_name=id_field_name, ref_field_prefix=ref_field_prefix)
+        md.flat(fd_key=fd_key, fd=fd,
+                sep=sep,
+                id_field_name=id_field_name,
+                ref_field_prefix=ref_field_prefix)
     return fd
 
 

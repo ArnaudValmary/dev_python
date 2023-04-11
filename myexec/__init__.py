@@ -50,7 +50,10 @@ def exec_command(cmd: str,
         exception = str(e)
     if not exception:
         try:
-            (out_bytes, err_bytes) = sp.communicate(input=stdin_bytes, timeout=timeout_seconds)
+            (out_bytes, err_bytes) = sp.communicate(
+                input=stdin_bytes,
+                timeout=timeout_seconds
+            )
         except subprocess.TimeoutExpired as spte:
             timeout_flag = True
             exception = str(spte)

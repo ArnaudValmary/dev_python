@@ -127,7 +127,9 @@ class mydict(dict):
         c_d: Any = self
         for i, field_name in enumerate(field_names):
             flag_list: bool = False
-            z: re.Match[str] | None = re.match(r'^(?P<field_name>[^[]+)\[(?P<list_index>-?[0-9]+)\]$', field_name)
+            z: re.Match[str] | None = re.match(
+                r'^(?P<field_name>[^[]+)\[(?P<list_index>-?[0-9]+)\]$',
+                field_name)
             if z is not None:
                 flag_list = True
                 field_name: str = z.group('field_name')

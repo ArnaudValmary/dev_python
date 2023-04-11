@@ -1,5 +1,6 @@
-from mydict import mydict
 import json
+
+from mydict import mydict
 
 
 def test_file_write_read() -> None:

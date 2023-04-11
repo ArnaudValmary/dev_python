@@ -1,6 +1,5 @@
 #! /usr/bin/env bash
 
-. ./project.env
 . ./run_tests.sh
 
 declare -a coverage_run_with_pytest_and_build_xml_report=(

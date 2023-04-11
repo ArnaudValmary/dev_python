@@ -1,5 +1,5 @@
-import json
 from typing import Any, Dict, List
+
 import mydict.csv
 
 
@@ -66,14 +66,16 @@ def test_dict_list_2_zip() -> None:
     # List of records
     records: List[Dict[str, Any]] = [d1, d2]
 
-    csv_files: Dict[str, Dict[str, str]] = mydict.csv.create_csv_files_from_dict_list(records, "root")
+    csv_files: Dict[str, Dict[str, str]
+                    ] = mydict.csv.create_csv_files_from_dict_list(records, "root")
     # print("json(csv_files)=<%s>" % (json.dumps(csv_files, indent=2)))
 
     assert csv_files
 
     # Create Zip file
     dir_name: str = "dirname"
-    zip_buffer: bytes = mydict.csv.create_zip_files(csv_files, internal_dir_name=dir_name)
+    zip_buffer: bytes = mydict.csv.create_zip_files(
+        csv_files, internal_dir_name=dir_name)
 
     assert zip_buffer
 
