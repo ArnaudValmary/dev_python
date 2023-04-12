@@ -2,7 +2,7 @@
 
 . run_pipenv.sh
 
-declare -a pytest_run=(
+declare -a run_pytest=(
     "pytest"
     "--verbose"
     "--full-trace"
@@ -12,7 +12,7 @@ declare -a pytest_run=(
 run_test () {
     export_vars
     set -x
-    "${pipenv_run[@]}" "${pytest_run[@]}"
+    "${run_pipenv_run[@]}" "${run_pytest[@]}"
     set +x
 }
 

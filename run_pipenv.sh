@@ -3,7 +3,7 @@
 . ./project.env
 
 # shellcheck disable=SC2034
-declare -a pipenv_run=(
+declare -a run_pipenv_run=(
     "pipenv"
     "run"
 )
