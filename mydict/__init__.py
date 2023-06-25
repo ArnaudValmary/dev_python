@@ -9,6 +9,14 @@ from typing import Any, Dict, List, Union
 from uuid import uuid4 as get_uuid
 
 
+def get_str_sorted_list_elem(lst: List, *args, **kw) -> List:
+    return sorted(lst, key=str, reverse=kw.get('reverse', False))
+
+
+def get_int_sorted_list_elem(lst: List, *args, **kw) -> List:
+    return sorted(lst, key=int, reverse=kw.get('reverse', False))
+
+
 class mydict(dict):
     def __init__(self, *args, **kw) -> None:
         super(mydict, self).__init__(*args, **kw)
@@ -54,15 +62,7 @@ class mydict(dict):
 
             field_value: Any = self[field_name]
 
-            if isinstance(field_value, Dict):
-                # print("  sub:%s" % field_name)
-                mydict(field_value)._flat(fd, fd_key=fd_key,
-                                          prefix=field_name_value,
-                                          record=record,
-                                          sep=sep,
-                                          id_field_name=id_field_name,
-                                          ref_field_prefix=ref_field_prefix)
-            elif isinstance(field_value, mydict):
+            if isinstance(field_value, mydict):
                 # print("  sub:%s" % field_name)
                 field_value._flat(fd, fd_key=fd_key,
                                   prefix=field_name_value,
@@ -70,6 +70,14 @@ class mydict(dict):
                                   sep=sep,
                                   id_field_name=id_field_name,
                                   ref_field_prefix=ref_field_prefix)
+            elif isinstance(field_value, Dict):
+                # print("  sub:%s" % field_name)
+                mydict(field_value)._flat(fd, fd_key=fd_key,
+                                          prefix=field_name_value,
+                                          record=record,
+                                          sep=sep,
+                                          id_field_name=id_field_name,
+                                          ref_field_prefix=ref_field_prefix)
             elif isinstance(field_value, List):
                 for elt in self[field_name]:
                     mydict(elt)._flat(fd, fd_key=field_name,
@@ -104,7 +112,10 @@ class mydict(dict):
         return fd
 
     def get_int_sorted_keys(self, *args, **kw) -> List:
-        return sorted(self.keys(), key=int, *args, **kw)
+        return get_int_sorted_list_elem(list(self.keys()), key=int, *args, **kw)
+
+    def get_str_sorted_keys(self, *args, **kw) -> List:
+        return get_str_sorted_list_elem(list(self.keys()), key=str, *args, **kw)
 
     def get_depth(self,
                   f: Union[List[str], str] = None,

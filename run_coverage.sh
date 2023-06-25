@@ -4,6 +4,7 @@
 
 declare -a run_coverage_with_pytest_and_build_xml_report=(
     "pytest"
+    "--junitxml" "${coverage_junit_filename}"
     "--cov-config=${coverage_config_filename}"
     "--cov-report" "xml:${coverage_xml_report_filename}"
 )

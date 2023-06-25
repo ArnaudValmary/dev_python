@@ -65,9 +65,11 @@ Run [script](./run_coverage.sh)
 * Python
     * [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
     * [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance)
-    * [Flake8](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8)
-    * [autopep8](https://marketplace.visualstudio.com/items?itemName=ms-python.autopep8)
-    * [isort](https://marketplace.visualstudio.com/items?itemName=ms-python.isort)
+    * Linting:
+        * [Flake8](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8)
+    * Formatting:
+        * [autopep8](https://marketplace.visualstudio.com/items?itemName=ms-python.autopep8)
+        * [isort](https://marketplace.visualstudio.com/items?itemName=ms-python.isort)
     * [Python Environment Manager](https://marketplace.visualstudio.com/items?itemName=donjayamanne.python-environment-manager)
 * Shell
     * [ShellCheck](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck)
