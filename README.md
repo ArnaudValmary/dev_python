@@ -1,60 +1,72 @@
 # dev_python
 
 ## Initialization
+
 Site: https://pipenv.pypa.io/
 
 On PyPI: https://pypi.org/project/pipenv/
+
 ```bash
 pipenv install --dev
 ```
 
 ## Tests
+
 Site: https://docs.pytest.org/
 
 On PyPI: https://pypi.org/project/pytest/
 
-**Run tests**
+### Run tests
+
 ```bash
 PYTHONPATH=. pipenv run pytest --verbose --full-trace -r A
 ```
 
 **Script encapsulation**
 Run [script](./run_tests.sh)
+
 ```bash
 ./run_tests.sh
 ```
 
 ## Coverage
+
 Site: https://coverage.readthedocs.io/
 
 On PyPI: https://pypi.org/project/coverage/
 
 Configuration in: [`.coveragerc`](./.coveragerc) file
 
-**Run coverage**
+### Run coverage
+
 Based on pytest
+
 ```bash
 PYTHONPATH=. pipenv run coverage run -m pytest --verbose --tb=long -r A
 ```
 
-**View text report**
+### View text report
+
 ```bash
 pipenv run coverage report -m
 ```
 
-**Run coverage and generate XML report**
+#### Run coverage and generate XML report
+
 ```bash
 pipenv run pytest --cov-config=./.coveragerc --cov-report xml:./coverage.xml --cov .
 ```
 
-**Generate HTML report and see it**
-```
+#### Generate HTML report and see it
+
+```bash
 pipenv run coverage html
 firefox htmlcov/index.html
 ```
 
 **Script encapsulation**
 Run [script](./run_coverage.sh)
+
 ```bash
 ./run_coverage.sh
 ```
@@ -62,24 +74,26 @@ Run [script](./run_coverage.sh)
 ## Visual Studio Code
 
 ### Extensions
+
 * Python
-    * [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
-    * [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance)
-    * Linting:
-        * [Flake8](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8)
-    * Formatting:
-        * [autopep8](https://marketplace.visualstudio.com/items?itemName=ms-python.autopep8)
-        * [isort](https://marketplace.visualstudio.com/items?itemName=ms-python.isort)
-    * [Python Environment Manager](https://marketplace.visualstudio.com/items?itemName=donjayamanne.python-environment-manager)
+  * [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+  * [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance)
+  * Linting:
+    * [Flake8](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8)
+  * Formatting:
+    * [autopep8](https://marketplace.visualstudio.com/items?itemName=ms-python.autopep8)
+    * [isort](https://marketplace.visualstudio.com/items?itemName=ms-python.isort)
+  * [Python Environment Manager](https://marketplace.visualstudio.com/items?itemName=donjayamanne.python-environment-manager)
 * Shell
-    * [ShellCheck](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck)
+  * [ShellCheck](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck)
 * TOML
-    * [Even Better TOML](https://marketplace.visualstudio.com/items?itemName=tamasfe.even-better-toml)
+  * [Even Better TOML](https://marketplace.visualstudio.com/items?itemName=tamasfe.even-better-toml)
 * Others
-    * [Render Line Endings](https://marketplace.visualstudio.com/items?itemName=medo64.render-crlf)
-    * [Todo Tree](https://marketplace.visualstudio.com/items?itemName=Gruntfuggly.todo-tree)
+  * [Render Line Endings](https://marketplace.visualstudio.com/items?itemName=medo64.render-crlf)
+  * [Todo Tree](https://marketplace.visualstudio.com/items?itemName=Gruntfuggly.todo-tree)
 
 ### Parameters
+
 ```json
 {
     "files.associations": {

@@ -4,6 +4,7 @@
 **/.pytest_cache
 **/result.xml
 **/junit.result.xml
+**/__pycache__
 # Coverage
 **/.coverage
 **/htmlcov
