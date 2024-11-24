@@ -1,5 +1,6 @@
 *.lock
 **/tmp
+**/sandbox
 # Tests
 **/.pytest_cache
 **/result.xml
