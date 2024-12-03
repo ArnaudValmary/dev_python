@@ -1,6 +1,12 @@
 #! /usr/bin/env bash
 
-. ./run_pipenv.sh
+if [[ -f pyproject.toml ]] && grep -E "tool\.poetry" "pyproject.toml"; then
+    source run_poetry.sh
+elif [[ -f Pipfile ]]; then
+    source run_pipenv.sh
+else
+    echo "No environment file found. Exit" >&2
+fi
 
 declare -a run_coverage_with_pytest_and_build_xml_report=(
     "pytest"
@@ -22,14 +28,15 @@ run_coverage_and_build_xml_report () {
     set -x
     rm -f "${coverage_report_filename}"
     rm -f "${coverage_xml_report_filename}"
-    "${run_pipenv_run[@]}" "${run_coverage_with_pytest_and_build_xml_report[@]}"
+    "${run_in_env[@]}" "${run_coverage_with_pytest_and_build_xml_report[@]}"
     set +x
 }
+
 run_build_coverage_html_report () {
     export_vars
     set -x
     rm -rf "${coverage_html_report_dirname}"
-    "${run_pipenv_run[@]}" "${build_coverage_html_report[@]}"
+    "${run_in_env[@]}" "${build_coverage_html_report[@]}"
     set +x
 }
 

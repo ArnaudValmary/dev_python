@@ -1,6 +1,12 @@
 #! /usr/bin/env bash
 
-. run_pipenv.sh
+if [[ -f pyproject.toml ]] && grep -E "tool\.poetry" "pyproject.toml"; then
+    source run_poetry.sh
+elif [[ -f Pipfile ]]; then
+    source run_pipenv.sh
+else
+    echo "No environment file found. Exit" >&2
+fi
 
 declare -a run_pytest=(
     "pytest"
@@ -21,14 +27,14 @@ declare -a run_pytest_junit=(
 run_test () {
     export_vars
     set -x
-    "${run_pipenv_run[@]}" "${run_pytest[@]}"
+    "${run_in_env[@]}" "${run_pytest[@]}"
     set +x
 }
 
 run_test_junit () {
     export_vars
     set -x
-    "${run_pipenv_run[@]}" "${run_pytest_junit[@]}"
+    "${run_in_env[@]}" "${run_pytest_junit[@]}"
     set +x
 }
 
