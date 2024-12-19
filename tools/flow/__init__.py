@@ -2,7 +2,6 @@
 
 import inspect
 import logging
-import os
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 logger: logging.Logger = logging.getLogger('Flow')
@@ -134,6 +133,7 @@ class Flow:
 
 
 if __name__ == '__main__':
+    import os
     def init_range_value(context: Dict) -> None:
         context['range_size'] = int(os.environ.get('range_size', 10))
         context['nums'] = []
