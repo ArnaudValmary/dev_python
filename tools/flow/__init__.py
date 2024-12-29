@@ -6,12 +6,9 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 logger: logging.Logger = logging.getLogger('Flow')
 
-
-class FlowSkipData(Exception):
-    """
-    Exception raised when a function skips data.
-    """
-    pass
+#
+# Function who could be moved in another file
+#
 
 
 def get_fct_parameter_names(fct: Callable) -> List[str]:
@@ -25,6 +22,17 @@ def get_fct_parameter_names(fct: Callable) -> List[str]:
         List[str]: The list of parameter names.
     """
     return list(inspect.signature(fct).parameters.keys())
+
+#
+# Flow classes
+#
+
+
+class FlowSkipData(Exception):
+    """
+    Exception raised when a function skips data.
+    """
+    pass
 
 
 class Flow:
@@ -250,6 +258,18 @@ class Flow:
 if __name__ == '__main__':
     import os
 
+    #
+    # Configure logger
+    #
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)  # Put logging.INFO to turn off Flow class logs
+
+    #
+    # Flow functions
+    #
     def init_range_value(context: Dict) -> None:
         """
         Initializes a range value.
@@ -273,10 +293,11 @@ if __name__ == '__main__':
         """
         logger.info("Read data...")
         for i in range(context['range_size']):
-            logger.info("n=%d" % i)
+            logger.info("data internal integer is: %d" % i)
             yield {
                 'num': i,
             }
+        logger.info("...all data read data")
 
     def filter_even(data: Dict, context: Dict) -> Union[Dict, None]:
         """
@@ -301,15 +322,12 @@ if __name__ == '__main__':
         Args:
             data (Dict): The data to print.
         """
-        logger.info(data)
+        logger.info("data is: %s" % data)
         context['nums'].append(data.get('num', None))
 
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
-
+    #
+    # Run flow
+    #
     nb_data_total: int = 0
     nb_data_processed: int = 0
     nb_data_skip: int = 0
@@ -328,17 +346,20 @@ if __name__ == '__main__':
         context=context
     ).run()
 
-    logger.info("context=%s" % context)
+    logger.info("End of flow")
+    logger.info("context is: %s" % context)
 
     if nb_data_total > 0:
         logger.info(
-            "nb_data_ok=%d / self.nb_data_skip=%d / nb_data_all=%d (%3.2f%%) / nb_data_none=%d" %
+            "nb_data_all=%d / nb_data_ok=%d (%3.2f%%) / self.nb_data_skip=%d (%3.2f%%) / nb_data_none=%d (%3.2f%%)" %
             (
-                nb_data_processed,
-                nb_data_skip,
                 nb_data_total,
+                nb_data_processed,
                 nb_data_processed * 100 / nb_data_total,
-                nb_data_stopped_by_none
+                nb_data_skip,
+                nb_data_skip * 100 / nb_data_total,
+                nb_data_stopped_by_none,
+                nb_data_stopped_by_none * 100 / nb_data_total
             )
         )
     else:
