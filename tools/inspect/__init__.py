@@ -1,6 +1,20 @@
 import inspect
+from typing import Callable, List
 
 __SHIFT = '  '
+
+
+def get_fct_parameter_names(fct: Callable) -> List[str]:
+    """
+    Returns the list of parameter names from the given function.
+
+    Args:
+        fct (Callable): The function to extract parameters from.
+
+    Returns:
+        List[str]: The list of parameter names.
+    """
+    return list(inspect.signature(fct).parameters.keys())
 
 
 def get_current_fct_filename(level: int = 1) -> str:

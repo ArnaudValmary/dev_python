@@ -1,31 +1,11 @@
 #! /usr/bin/env python
 
-import inspect
 import logging
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
+from tools.inspect import get_fct_parameter_names
+
 logger: logging.Logger = logging.getLogger('Flow')
-
-#
-# Function who could be moved in another file
-#
-
-
-def get_fct_parameter_names(fct: Callable) -> List[str]:
-    """
-    Returns the list of parameter names from the given function.
-
-    Args:
-        fct (Callable): The function to extract parameters from.
-
-    Returns:
-        List[str]: The list of parameter names.
-    """
-    return list(inspect.signature(fct).parameters.keys())
-
-#
-# Flow classes
-#
 
 
 class FlowSkipData(Exception):
