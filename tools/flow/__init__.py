@@ -15,6 +15,27 @@ class FlowSkipData(Exception):
     pass
 
 
+class FlowInitError(Exception):
+    """
+    Exception raised when init
+    """
+    pass
+
+
+class FlowLoadError(Exception):
+    """
+    Exception raised when load
+    """
+    pass
+
+
+class FlowFilterError(Exception):
+    """
+    Exception raised when filter
+    """
+    pass
+
+
 class Flow:
     """
     A flow of data processing functions.
@@ -42,6 +63,7 @@ class Flow:
         Args:
             fct (Callable): The function to add.
         """
+
         self.functions_nb += 1
         if 'context' in get_fct_parameter_names(fct):
             self.functions_dict[self.functions_nb] = True
@@ -49,9 +71,9 @@ class Flow:
             self.functions_dict[self.functions_nb] = False
 
     def __init__(self,
-                 fct_init: Union[Callable, List[Callable]],
-                 fct_load: Callable,
-                 fct_filter: Union[Callable, List[Callable]],
+                 fct_init: Optional[Union[Callable, List[Callable]]] = None,
+                 fct_load: Optional[Callable] = None,
+                 fct_filter: Optional[Union[Callable, List[Callable]]] = None,
                  continue_if_none: bool = False,
                  ignore_last_filter_return: bool = True,
                  context: Optional[Dict] = None) -> None:
@@ -69,6 +91,7 @@ class Flow:
         Raises:
             ValueError: If fct_init or fct_load are not callable.
         """
+
         self.functions_dict: Dict[int, bool] = {}
         self.context: Dict = {}
         self.continue_if_none: bool = continue_if_none
@@ -76,18 +99,20 @@ class Flow:
         self.functions_nb: int = 0
 
         self.functions_init: List[Callable] = None
-        if not isinstance(fct_init, list):
-            self.functions_init = [fct_init]
-        else:
-            self.functions_init = fct_init
+        if fct_init is not None:
+            if isinstance(fct_init, list):
+                self.functions_init = fct_init
+            else:
+                self.functions_init = [fct_init]
 
         self.function_load: Callable = fct_load
 
         self.functions_filter: List[Callable] = None
-        if not isinstance(fct_init, list):
-            self.functions_filter = [fct_filter]
-        else:
-            self.functions_filter = fct_filter
+        if fct_filter is not None:
+            if isinstance(fct_filter, list):
+                self.functions_filter = fct_filter
+            else:
+                self.functions_filter = [fct_filter]
 
         if context is not None:
             self.context = context
@@ -106,10 +131,12 @@ class Flow:
         Returns:
             Any: The filtered data.
         """
+
         if self.functions_dict[fct_idx_tmp]:
             data: Any = fct(data=data, context=self.context)
         else:
             data: Any = fct(data=data)
+
         return data
 
     def __apply_filters(self, data, fct_idx_tmp) -> None:
@@ -120,6 +147,7 @@ class Flow:
             data (Any): The data to apply the filters to.
             fct_idx_tmp (int): The index of the filter.
         """
+
         index: int = 0
         for index, fct in enumerate(self.functions_filter, start=1):
             fct_idx_tmp += 1
@@ -140,15 +168,19 @@ class Flow:
         """
         Builds the flow's dictionary with functions and their context requirements.
         """
+
         self.functions_nb: int = 0
 
-        for fct in self.functions_init:
-            self.__add_function_in_dict(fct)
+        if self.functions_init is not None:
+            for fct in self.functions_init:
+                self.__add_function_in_dict(fct)
 
-        self.__add_function_in_dict(self.function_load)
+        if self.function_load is not None:
+            self.__add_function_in_dict(self.function_load)
 
-        for fct in self.functions_filter:
-            self.__add_function_in_dict(fct)
+        if self.functions_filter is not None:
+            for fct in self.functions_filter:
+                self.__add_function_in_dict(fct)
 
     def __init_flow(self, fct_idx: int = 0) -> int:
         """
@@ -160,14 +192,18 @@ class Flow:
         Returns:
             int: The final index.
         """
+
         logger.debug("Init...")
+
         for fct in self.functions_init:
             fct_idx += 1
             if self.functions_dict[fct_idx]:
                 fct(context=self.context)
             else:
                 fct()
+
         logger.debug("...end of init")
+
         return fct_idx
 
     def __load_data(self, fct_idx: int = 0) -> Tuple[int, Generator]:
@@ -180,14 +216,18 @@ class Flow:
         Returns:
             Tuple[int, Generator]: The final index and a generator of filtered data.
         """
+
         logger.debug("Call data generator...")
+
         fct_idx += 1
         fct: Callable = self.function_load
         if self.functions_dict[fct_idx]:
             all_data: Generator = fct(context=self.context)
         else:
             all_data: Generator = fct()
+
         logger.debug("End of call generator")
+
         return fct_idx, all_data
 
     def __filter_data(self, fct_idx: int, all_data: Generator) -> Tuple[int, int, int, int]:
@@ -201,12 +241,15 @@ class Flow:
         Returns:
             Tuple[int, int, int, int]: The total count, processed count, skipped count, and stopped by None count.
         """
+
         logger.debug("Apply filters...")
+
         self.nb_filters: int = len(self.functions_filter)
         self.nb_data_total: int = 0
         self.nb_data_processed: int = 0
         self.nb_data_skip: int = 0
         self.nb_data_stopped_with_none: int = 0
+
         for data in all_data:
             self.nb_data_total += 1
             fct_idx_tmp: int = fct_idx
@@ -215,7 +258,9 @@ class Flow:
             except FlowSkipData as fsoe:
                 self.nb_data_skip += 1
                 logger.debug("FlowSkipData: %s" % fsoe)
+
         logger.debug("...end of filters")
+
         return self.nb_data_total, self.nb_data_processed, self.nb_data_skip, self.nb_data_stopped_with_none
 
     def run(self) -> Tuple[int, int, int, int]:
@@ -225,11 +270,26 @@ class Flow:
         Returns:
             Tuple[int, int, int, int]: The final index, total count, processed count, and skipped count.
         """
+
         self.__build_function_dict()
 
-        fct_idx: int = self.__init_flow()
-        fct_idx, all_data = self.__load_data(fct_idx)
-        return self.__filter_data(fct_idx, all_data)
+        fct_idx: int = 0
+        if self.functions_init is None:
+            logger.warning("Flow: No init functions")
+        else:
+            fct_idx = self.__init_flow()
+
+        if self.function_load is None:
+            logger.warning("Flow: No load function")
+        else:
+            if self.functions_filter is None:
+                logger.warning("Flow: No filter functions")
+            else:
+                all_data: Generator = None
+                fct_idx, all_data = self.__load_data(fct_idx)
+                return self.__filter_data(fct_idx, all_data)
+
+        return 0, 0, 0, 0
 
 
 #
