@@ -1,11 +1,14 @@
 #! /usr/bin/env python
 
 import logging
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Final, Generator, List, Optional, Tuple, Union
 
 from tools.inspect import get_fct_parameter_names
 
 logger: logging.Logger = logging.getLogger('Flow')
+
+final:     Final[bool] = True
+not_final: Final[bool] = False
 
 
 class FlowSkipData(Exception):
@@ -56,7 +59,7 @@ class Flow:
         run(): Runs the flow and returns the final index and counts.
     """
 
-    def __add_function_in_dict(self, fct: Callable) -> None:
+    def __add_flow_function_in_dict(self, fct: Callable) -> None:
         """
         Adds a function to the flow's dictionary, indicating whether its context is required.
 
@@ -64,19 +67,28 @@ class Flow:
             fct (Callable): The function to add.
         """
 
-        self.functions_nb += 1
+        self.flow_functions_nb += 1
         if 'context' in get_fct_parameter_names(fct):
-            self.functions_dict[self.functions_nb] = True
+            self.flow_functions_dict[self.flow_functions_nb] = True
         else:
-            self.functions_dict[self.functions_nb] = False
+            self.flow_functions_dict[self.flow_functions_nb] = False
+
+    def __add_modulo_function_in_dict(self, fct: Callable, modulo_n: int, idx_fct: int) -> None:
+        if 'context' in get_fct_parameter_names(fct):
+            self.modulo_functions_dict[modulo_n, idx_fct] = True
+        else:
+            self.modulo_functions_dict[modulo_n, idx_fct] = False
 
     def __init__(self,
                  fct_init: Optional[Union[Callable, List[Callable]]] = None,
                  fct_load: Optional[Callable] = None,
                  fct_filter: Optional[Union[Callable, List[Callable]]] = None,
+                 fct_modulo: Optional[Dict[int, Union[Callable, List[Callable]]]] = None,
                  continue_if_none: bool = False,
                  ignore_last_filter_return: bool = True,
-                 context: Optional[Dict] = None) -> None:
+                 context: Optional[Dict] = None,
+                 log_modulo: Optional[int] = None,
+                 size_of_set: Optional[int] = None) -> None:
         """
         Initializes a new Flow instance.
 
@@ -92,14 +104,28 @@ class Flow:
             ValueError: If fct_init or fct_load are not callable.
         """
 
-        self.functions_dict: Dict[int, bool] = {}
+        self.flow_functions_dict: Dict[int, bool] = {}
         self.context: Dict = {}
         self.continue_if_none: bool = continue_if_none
         self.ignore_last_filter_return: bool = ignore_last_filter_return
-        self.functions_nb: int = 0
+        self.flow_functions_nb: int = 0
+        self.modulo_functions_nb: int = 0
+        self.modulo_functions_dict: Dict[int, Union[Callable, List[Callable]]] = {}
+        self.size_of_set: Optional[int] = size_of_set
+        self.log_modulo: Optional[int] = log_modulo
+
+        if self.size_of_set is not None and isinstance(self.size_of_set, int) and self.size_of_set <= 0:
+            logger.error("Flow: size of set value is invalid integer: %d <= 0" % self.size_of_set)
+            self.size_of_set = None
+        if self.size_of_set is not None and isinstance(self.size_of_set, str) and not self.size_of_set.startswith('context:'):
+            logger.error("Flow: size of set value is invalid str: '%s' doesn't starts by 'context:'" % self.size_of_set)
+            self.size_of_set = None
+
+        if self.log_modulo is not None and self.log_modulo <= 0:
+            self.log_modulo = None
 
         self.functions_init: List[Callable] = None
-        if fct_init is not None:
+        if fct_init:
             if isinstance(fct_init, list):
                 self.functions_init = fct_init
             else:
@@ -108,18 +134,20 @@ class Flow:
         self.function_load: Callable = fct_load
 
         self.functions_filter: List[Callable] = None
-        if fct_filter is not None:
+        if fct_filter:
             if isinstance(fct_filter, list):
                 self.functions_filter = fct_filter
             else:
                 self.functions_filter = [fct_filter]
+
+        self.functions_modulo: Optional[Dict[int, Union[Callable, List[Callable]]]] = fct_modulo
 
         if context is not None:
             self.context = context
 
         logger.debug('Flow init done')
 
-    def __apply_filter(self, data, fct_idx_tmp, fct) -> Any:
+    def __apply_filter_fct(self, data, fct_idx_tmp, fct) -> Any:
         """
         Applies a filter to the given data.
 
@@ -132,14 +160,14 @@ class Flow:
             Any: The filtered data.
         """
 
-        if self.functions_dict[fct_idx_tmp]:
+        if self.flow_functions_dict[fct_idx_tmp]:
             data: Any = fct(data=data, context=self.context)
         else:
             data: Any = fct(data=data)
 
         return data
 
-    def __apply_filters(self, data, fct_idx_tmp) -> None:
+    def __apply_filters_fct(self, data, fct_idx_tmp) -> None:
         """
         Applies all filters to the given data.
 
@@ -151,7 +179,7 @@ class Flow:
         index: int = 0
         for index, fct in enumerate(self.functions_filter, start=1):
             fct_idx_tmp += 1
-            data: Any = self.__apply_filter(data, fct_idx_tmp, fct)
+            data: Any = self.__apply_filter_fct(data, fct_idx_tmp, fct)
             if (data is None
                     and not self.continue_if_none
                     and
@@ -164,23 +192,62 @@ class Flow:
         else:
             self.nb_data_processed += 1
 
-    def __build_function_dict(self) -> None:
+    def __build_function_dicts(self) -> None:
         """
         Builds the flow's dictionary with functions and their context requirements.
         """
 
-        self.functions_nb: int = 0
+        self.flow_functions_nb: int = 0
 
-        if self.functions_init is not None:
+        if self.functions_init:
             for fct in self.functions_init:
-                self.__add_function_in_dict(fct)
+                self.__add_flow_function_in_dict(fct)
 
-        if self.function_load is not None:
-            self.__add_function_in_dict(self.function_load)
+        if self.function_load:
+            self.__add_flow_function_in_dict(self.function_load)
 
-        if self.functions_filter is not None:
+        if self.functions_filter:
             for fct in self.functions_filter:
-                self.__add_function_in_dict(fct)
+                self.__add_flow_function_in_dict(fct)
+
+        if self.functions_modulo:
+            new_functions_modulo: Dict[int, Union[Callable, List[Callable]]] = {}
+            for modulo_n in self.functions_modulo:
+                if modulo_n <= 0:
+                    logger.error("Flow: modulo value is invalid integer: %d <= 0" % modulo_n)
+                else:
+                    modulos_fct: Union[Callable, List[Callable]] = self.functions_modulo[modulo_n]
+                    if modulos_fct and not isinstance(modulos_fct, list):
+                        modulos_fct = [modulos_fct]
+                    if modulos_fct:
+                        for idx_fct, fct in enumerate(modulos_fct, start=1):
+                            self.__add_modulo_function_in_dict(fct, modulo_n, idx_fct)
+                        new_functions_modulo[modulo_n] = modulos_fct
+            if new_functions_modulo:
+                self.functions_modulo = new_functions_modulo
+            else:
+                self.functions_modulo = None
+
+    def __init_vars(self):
+        if self.size_of_set is not None and isinstance(self.size_of_set, str):
+            if self.size_of_set.startswith('context:'):
+                self.size_of_set = self.size_of_set.replace('context:', '', 1)
+                if self.size_of_set in self.context:
+                    self.size_of_set = self.context[self.size_of_set]
+                    if self.size_of_set is not None:
+                        if isinstance(self.size_of_set, int):
+                            if self.size_of_set <= 0:
+                                logger.error("Flow: size of set value is invalid integer: %d <= 0" % self.size_of_set)
+                                self.size_of_set = None
+                        else:
+                            logger.error("Flow: size of set value is not an integer: %s" % self.size_of_set)
+                            self.size_of_set = None
+                else:
+                    logger.error("Flow: size of set value field name '%s' not in context" % self.size_of_set)
+                    self.size_of_set = None
+            else:
+                logger.error("Flow: size of set value is invalid str: '%s' doesn't starts by 'context:'" % self.size_of_set)
+                self.size_of_set = None
 
     def __init_flow(self, fct_idx: int = 0) -> int:
         """
@@ -197,10 +264,12 @@ class Flow:
 
         for fct in self.functions_init:
             fct_idx += 1
-            if self.functions_dict[fct_idx]:
+            if self.flow_functions_dict[fct_idx]:
                 fct(context=self.context)
             else:
                 fct()
+
+        self.__init_vars()
 
         logger.debug("...end of init")
 
@@ -221,7 +290,7 @@ class Flow:
 
         fct_idx += 1
         fct: Callable = self.function_load
-        if self.functions_dict[fct_idx]:
+        if self.flow_functions_dict[fct_idx]:
             all_data: Generator = fct(context=self.context)
         else:
             all_data: Generator = fct()
@@ -229,6 +298,35 @@ class Flow:
         logger.debug("End of call generator")
 
         return fct_idx, all_data
+
+    def __log_modulo(self, flag_final: bool = not_final) -> None:
+        if self.size_of_set is None:
+            logger.debug(
+                "Flow: #data%s = %d" % (
+                    ' (final)' if flag_final else '',
+                    self.nb_data_total)
+            )
+        else:
+            logger.debug(
+                "Flow: #data%s = %d/%d (%3.2f%%)" % (
+                    ' (final)' if flag_final else '',
+                    self.nb_data_total,
+                    self.size_of_set,
+                    self.nb_data_total * 100 / self.size_of_set
+                )
+            )
+
+    def __apply_modulo_fct(self, modulo_n, idx_fct, fct):
+        if self.modulo_functions_dict[modulo_n, idx_fct]:
+            fct(idx=self.nb_data_total, context=self.context)
+        else:
+            fct(idx=self.nb_data_total)
+
+    def __apply_modulos_fct(self):
+        for modulo_n in self.functions_modulo:
+            if self.nb_data_total % modulo_n == 0:
+                for idx_fct, fct in enumerate(self.functions_modulo[modulo_n], start=1):
+                    self.__apply_modulo_fct(modulo_n, idx_fct, fct)
 
     def __filter_data(self, fct_idx: int, all_data: Generator) -> Tuple[int, int, int, int]:
         """
@@ -252,12 +350,22 @@ class Flow:
 
         for data in all_data:
             self.nb_data_total += 1
+
             fct_idx_tmp: int = fct_idx
             try:
-                self.__apply_filters(data, fct_idx_tmp)
+                self.__apply_filters_fct(data, fct_idx_tmp)
             except FlowSkipData as fsoe:
                 self.nb_data_skip += 1
                 logger.debug("FlowSkipData: %s" % fsoe)
+
+            if self.functions_modulo:
+                self.__apply_modulos_fct()
+
+            if self.log_modulo and self.nb_data_total % self.log_modulo == 0:
+                self.__log_modulo()
+
+        if self.log_modulo:
+            self.__log_modulo(final)
 
         logger.debug("...end of filters")
 
@@ -271,7 +379,7 @@ class Flow:
             Tuple[int, int, int, int]: The final index, total count, processed count, and skipped count.
         """
 
-        self.__build_function_dict()
+        self.__build_function_dicts()
 
         fct_idx: int = 0
         if self.functions_init is None:
@@ -317,7 +425,7 @@ if __name__ == '__main__':
         Args:
             context (Dict): The initial context.
         """
-        context['range_size'] = int(os.environ.get('range_size', 10))
+        context['range_size'] = int(os.environ.get('range_size', 99))
         context['nums'] = []
         logger.info("Init range_size to %d" % context['range_size'])
 
@@ -350,7 +458,7 @@ if __name__ == '__main__':
         Returns:
             Union[Dict, None]: The filtered data or None if the number is not between 5 and 8.
         """
-        if data.get('num', None) > 5 and data.get('num', None) < 8:
+        if (data.get('num', None) > 5 and data.get('num', None) < 20) or data.get('num', None) % 5 == 0:
             raise FlowSkipData('Ignore this num %d' % data.get('num', None))
         if data.get('num', None) % 2 == 0:
             return data
@@ -365,6 +473,15 @@ if __name__ == '__main__':
         logger.info("data is: %s" % data)
         context['nums'].append(data.get('num', None))
 
+    def call_48(idx: int):
+        logger.info("CALL_48:%d" % idx)
+
+    def call_49(idx: int, context: Dict):
+        logger.info("CALL_49:%d (%s)" % (idx, context))
+
+    def call_49BIS(idx: int):
+        logger.info("CALL_49BIS:%d" % (idx))
+
     #
     # Run flow
     #
@@ -372,6 +489,7 @@ if __name__ == '__main__':
     nb_data_processed: int = 0
     nb_data_skip: int = 0
     nb_data_stopped_by_none: int = 0
+    size_of_set: int = 99
     context: Dict = {}
     (nb_data_total, nb_data_processed, nb_data_skip, nb_data_stopped_by_none) = Flow(
         fct_init=[
@@ -383,7 +501,13 @@ if __name__ == '__main__':
             print_data,
         ],
         continue_if_none=False,
-        context=context
+        context=context,
+        log_modulo=13,
+        size_of_set='context:range_size',
+        fct_modulo={
+            48: call_48,
+            49: [call_49, call_49BIS],
+        }
     ).run()
 
     logger.info("End of flow")

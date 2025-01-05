@@ -1,7 +1,37 @@
 import inspect
-from typing import Callable, List
+import logging
+from typing import Callable, Final, List
 
-__SHIFT = '  '
+full_qual:                 Final[bool] = True
+not_full_qual:             Final[bool] = False
+
+default_path_and_name_sep: Final[str] = '.'
+
+__inspect_fct_filename_index: Final[int] = 1
+__inspect_fct_line_index:     Final[int] = 2
+__inspect_fct_name_index:     Final[int] = 3
+
+logger: logging.Logger = logging.getLogger('Inspect')
+
+
+def get_fct_name(fct: Callable, full_qual: bool = not_full_qual) -> str:
+    if full_qual:
+        return fct.__qualname__
+    else:
+        return fct.__name__
+
+
+def get_fct_filename(fct: Callable) -> str:
+    src_filename: str = None
+    try:
+        src_filename = inspect.getsourcefile(fct)
+    except TypeError:
+        src_filename = 'built-in'
+    return src_filename
+
+
+def get_full_fct_path_and_name(fct: Callable, full_qual: bool = not_full_qual, sep=default_path_and_name_sep) -> str:
+    return '%s%s%s' % (get_fct_filename(fct), sep, get_fct_name(fct, full_qual))
 
 
 def get_fct_parameter_names(fct: Callable) -> List[str]:
@@ -26,7 +56,7 @@ def get_current_fct_filename(level: int = 1) -> str:
     Returns:
         str: Caller function or method filename
     """
-    return inspect.stack()[level][1]
+    return inspect.stack()[level][__inspect_fct_filename_index]
 
 
 def get_current_fct_line(level: int = 1) -> str:
@@ -38,7 +68,7 @@ def get_current_fct_line(level: int = 1) -> str:
     Returns:
         str: Caller function or method line
     """
-    return inspect.stack()[level][2]
+    return inspect.stack()[level][__inspect_fct_line_index]
 
 
 def get_current_fct_name(level: int = 1) -> str:
@@ -50,10 +80,10 @@ def get_current_fct_name(level: int = 1) -> str:
     Returns:
         str: Caller function or method name
     """
-    return inspect.stack()[level][3]
+    return inspect.stack()[level][__inspect_fct_name_index]
 
 
-def print_pos(shift: int = 0, suffix: str = '', level: int = 1):
+def print_pos(level: int = 1):
     """Print the caller function or method name with filename and line
 
     Args:
@@ -61,12 +91,10 @@ def print_pos(shift: int = 0, suffix: str = '', level: int = 1):
         suffix (str, optional): Suffix string. Defaults to ''.
         level (int, optional): Index of previous caller. Defaults to 1.
     """
-    if suffix:
-        suffix = ' %s' % suffix
-    print("%sFunction '%s' in file '%s', line %s%s\n" % (
-          __SHIFT * shift,
-          get_current_fct_name(level + 1),
-          get_current_fct_filename(level + 1),
-          get_current_fct_line(level + 1),
-          suffix)
-          )
+    logger.debug(
+        "Inspect: Function '%s' in file '%s', line %s\n" % (
+            get_current_fct_name(level + 1),
+            get_current_fct_filename(level + 1),
+            get_current_fct_line(level + 1),
+        )
+    )
