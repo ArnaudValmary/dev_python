@@ -172,7 +172,7 @@ class Flow:
         if context is not None:
             self.context = context
 
-        logger.debug('Flow init done')
+        logger.debug('Flow: init done')
 
     def __apply_filter_fct(self, data, fct_idx_tmp, fct) -> Any:
         """
@@ -322,7 +322,7 @@ class Flow:
             int: The final index.
         """
 
-        logger.debug("Init...")
+        logger.debug("Flow: Init starts")
 
         for fct in self.functions_init:
             fct_idx += 1
@@ -333,7 +333,9 @@ class Flow:
 
         self.__init_vars()
 
-        logger.debug("...end of init")
+        logger.debug("Flow: Context is %s" % context)
+
+        logger.debug("Flow: Init ends")
 
         return fct_idx
 
@@ -348,7 +350,7 @@ class Flow:
             Tuple[int, Generator]: The final index and a generator of filtered data.
         """
 
-        logger.debug("Call data generator...")
+        logger.debug("Flow: Call data generator")
 
         fct_idx += 1
         fct: Callable = self.function_load
@@ -357,7 +359,7 @@ class Flow:
         else:
             all_data: Generator = fct()
 
-        logger.debug("End of call generator")
+        logger.debug("Flow: End of call generator")
 
         return fct_idx, all_data
 
@@ -431,7 +433,7 @@ class Flow:
             Tuple[int, int, int, int]: The total count, processed count, skipped count, and stopped by None count.
         """
 
-        logger.debug("Apply filters...")
+        logger.debug("Flow: Apply filters")
 
         self.nb_filters: int = len(self.functions_filter)
         self.nb_data_total: int = 0
@@ -458,7 +460,7 @@ class Flow:
         if self.log_modulo:
             self.__log_modulo(final)
 
-        logger.debug("...end of filters")
+        logger.debug("Flow: End of filters")
 
         return self.nb_data_total, self.nb_data_processed, self.nb_data_skip, self.nb_data_stopped_with_none
 
