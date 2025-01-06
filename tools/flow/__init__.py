@@ -59,6 +59,8 @@ class Flow:
         run(): Runs the flow and returns the final index and counts.
     """
 
+    context_prefix: Final[str] = 'context:'
+
     def __add_flow_function_in_dict(self, fct: Callable) -> None:
         """
         Adds a function to the flow's dictionary, indicating whether its context is required.
@@ -74,10 +76,45 @@ class Flow:
             self.flow_functions_dict[self.flow_functions_nb] = False
 
     def __add_modulo_function_in_dict(self, fct: Callable, modulo_n: int, idx_fct: int) -> None:
+        """
+        Adds or updates a modulo function in the dictionary based on whether it has a 'context' parameter.
+
+        Args:
+            fct (Callable): The function to check.
+            modulo_n (int): The modulo value to store in the dictionary.
+            idx_fct (int): The index of the function to store in the dictionary.
+        """
+
         if 'context' in get_fct_parameter_names(fct):
             self.modulo_functions_dict[modulo_n, idx_fct] = True
         else:
             self.modulo_functions_dict[modulo_n, idx_fct] = False
+
+    def __get_arg_integer_gt_zero(self, arg_value: Optional[Union[int, str]], comment: str) -> Optional[Union[int, str]]:
+        """
+        Validate and sanitize an argument value to ensure it meets good conditions.
+
+        Checks if the provided `arg_value` is a valid integer greater than zero. If not,
+        logs an error message and returns None.
+
+        Additionally checks if the `arg_value` is a string that starts with the
+        `context_prefix`. If not, logs another error message and returns None.
+
+        Args:
+            arg_value (Optional[Union[int, str]]): The value to be validated.
+            comment (str): A human-readable description of the argument used for logging purposes.
+
+        Returns:
+            Optional[Union[int, str]]: The validated `arg_value` or None if it's invalid.
+        """
+
+        if arg_value is not None and isinstance(arg_value, int) and arg_value <= 0:
+            logger.error("Flow: %s value is invalid integer: %d <= 0" % (comment, arg_value))
+            arg_value = None
+        if arg_value is not None and isinstance(arg_value, str) and not arg_value.startswith(self.context_prefix):
+            logger.error("Flow: %s value is invalid str: '%s' doesn't starts by '%s'" % (comment, arg_value, self.context_prefix))
+            arg_value = None
+        return arg_value
 
     def __init__(self,
                  fct_init: Optional[Union[Callable, List[Callable]]] = None,
@@ -87,18 +124,18 @@ class Flow:
                  continue_if_none: bool = False,
                  ignore_last_filter_return: bool = True,
                  context: Optional[Dict] = None,
-                 log_modulo: Optional[int] = None,
-                 size_of_set: Optional[int] = None) -> None:
+                 log_modulo: Optional[Union[int, str]] = None,
+                 size_of_set: Optional[Union[int, str]] = None) -> None:
         """
         Initializes a new Flow instance.
 
         Args:
-            fct_init (Union[Callable, List[Callable]]): The functions to initialize the flow.
-            fct_load (Callable): The function to load data from.
-            fct_filter (Union[Callable, List[Callable]]): The filters to apply to the data.
-            continue_if_none (bool, optional): Whether to continue processing if a filter returns None. Defaults to False.
-            ignore_last_filter_return (bool, optional): Whether to ignore the return value of the last filter. Defaults to True.
-            context (Optional[Dict], optional): The initial context for the flow. Defaults to None.
+            fct_init(Union[Callable, List[Callable]]): The functions to initialize the flow.
+            fct_load(Callable): The function to load data from .
+            fct_filter(Union[Callable, List[Callable]]): The filters to apply to the data.
+            continue_if_none(bool, optional): Whether to continue processing if a filter returns None. Defaults to False.
+            ignore_last_filter_return(bool, optional): Whether to ignore the return value of the last filter. Defaults to True.
+            context(Optional[Dict], optional): The initial context for the flow. Defaults to None.
 
         Raises:
             ValueError: If fct_init or fct_load are not callable.
@@ -111,18 +148,8 @@ class Flow:
         self.flow_functions_nb: int = 0
         self.modulo_functions_nb: int = 0
         self.modulo_functions_dict: Dict[int, Union[Callable, List[Callable]]] = {}
-        self.size_of_set: Optional[int] = size_of_set
-        self.log_modulo: Optional[int] = log_modulo
-
-        if self.size_of_set is not None and isinstance(self.size_of_set, int) and self.size_of_set <= 0:
-            logger.error("Flow: size of set value is invalid integer: %d <= 0" % self.size_of_set)
-            self.size_of_set = None
-        if self.size_of_set is not None and isinstance(self.size_of_set, str) and not self.size_of_set.startswith('context:'):
-            logger.error("Flow: size of set value is invalid str: '%s' doesn't starts by 'context:'" % self.size_of_set)
-            self.size_of_set = None
-
-        if self.log_modulo is not None and self.log_modulo <= 0:
-            self.log_modulo = None
+        self.size_of_set: Optional[Union[int, str]] = self.__get_arg_integer_gt_zero(size_of_set, 'size of set')
+        self.log_modulo: Optional[Union[int, str]] = self.__get_arg_integer_gt_zero(log_modulo, 'log modulo')
 
         self.functions_init: List[Callable] = None
         if fct_init:
@@ -152,9 +179,9 @@ class Flow:
         Applies a filter to the given data.
 
         Args:
-            data (Any): The data to apply the filter to.
-            fct_idx_tmp (int): The index of the filter.
-            fct (Callable): The filter function.
+            data(Any): The data to apply the filter to.
+            fct_idx_tmp(int): The index of the filter.
+            fct(Callable): The filter function.
 
         Returns:
             Any: The filtered data.
@@ -172,8 +199,8 @@ class Flow:
         Applies all filters to the given data.
 
         Args:
-            data (Any): The data to apply the filters to.
-            fct_idx_tmp (int): The index of the filter.
+            data(Any): The data to apply the filters to.
+            fct_idx_tmp(int): The index of the filter.
         """
 
         index: int = 0
@@ -228,26 +255,61 @@ class Flow:
             else:
                 self.functions_modulo = None
 
-    def __init_vars(self):
-        if self.size_of_set is not None and isinstance(self.size_of_set, str):
-            if self.size_of_set.startswith('context:'):
-                self.size_of_set = self.size_of_set.replace('context:', '', 1)
-                if self.size_of_set in self.context:
-                    self.size_of_set = self.context[self.size_of_set]
-                    if self.size_of_set is not None:
-                        if isinstance(self.size_of_set, int):
-                            if self.size_of_set <= 0:
-                                logger.error("Flow: size of set value is invalid integer: %d <= 0" % self.size_of_set)
-                                self.size_of_set = None
+    def __read_var_from_context_integer_gt_zero(self, fieldname: str, comment: Optional[str] = None) -> Optional[int]:
+        """
+        Retrieves an integer value from the context of a flow field.
+
+        This method attempts to parse the provided `fieldname` as a string that
+        represents an integer. If successful, it returns the parsed value; otherwise,
+        it logs an error message and returns `None`.
+
+        Args:
+            fieldname (str): The name of the field in the context.
+            comment (Optional[str], optional): A comment for logging purposes. Defaults to None.
+
+        Returns:
+            Optional[int]: The parsed integer value, or `None` if parsing fails.
+        """
+
+        value: Optional[Union[int, str]] = self.__getattribute__(fieldname)
+        if comment is None:
+            comment = fieldname.replace('_', ' ')
+        if value is not None and isinstance(value, str):
+            if value.startswith(self.context_prefix):
+                value = value.replace(self.context_prefix, '', 1)
+                if value in self.context:
+                    value = self.context[value]
+                    if value is not None:
+                        if isinstance(value, int):
+                            if value <= 0:
+                                logger.error("Flow: %s value is invalid integer: %d <= 0" % (comment, value))
+                                value = None
                         else:
-                            logger.error("Flow: size of set value is not an integer: %s" % self.size_of_set)
-                            self.size_of_set = None
+                            logger.error("Flow: %s value is not an integer: %s" % (comment, value))
+                            value = None
                 else:
-                    logger.error("Flow: size of set value field name '%s' not in context" % self.size_of_set)
-                    self.size_of_set = None
+                    logger.error("Flow: %s value field name '%s' not in context" % (comment, value))
+                    value = None
             else:
-                logger.error("Flow: size of set value is invalid str: '%s' doesn't starts by 'context:'" % self.size_of_set)
-                self.size_of_set = None
+                logger.error("Flow: %s value is invalid str: '%s' doesn't starts by '%s'" % (comment, value, self.context_prefix))
+                value = None
+        return value
+
+    def __init_vars(self) -> None:
+        """
+        Initializes instance variables from context values.
+
+        This method reads two integer values from the context:
+        - 'size_of_set': The number of elements in the set.
+        - 'log_modulo': A modulo value used for logarithmic calculations.
+
+        Both values are checked to ensure they are greater than zero, which is a valid input range.
+
+        :param self: The instance of the class
+        """
+
+        self.size_of_set = self.__read_var_from_context_integer_gt_zero('size_of_set')
+        self.log_modulo = self.__read_var_from_context_integer_gt_zero('log_modulo')
 
     def __init_flow(self, fct_idx: int = 0) -> int:
         """
@@ -300,6 +362,16 @@ class Flow:
         return fct_idx, all_data
 
     def __log_modulo(self, flag_final: bool = not_final) -> None:
+        """
+        Logs a message indicating the current state of the data set.
+
+        If the size of the set is known (i.e., it has been initialized), logs the total number of data points and the percentage completion.
+        Otherwise, logs only the total number of data points without any additional information.
+
+        Args:
+            flag_final (bool): A boolean indicating whether this is a final iteration or not. Defaults to False if not provided.
+        """
+
         if self.size_of_set is None:
             logger.debug(
                 "Flow: #data%s = %d" % (
@@ -316,13 +388,32 @@ class Flow:
                 )
             )
 
-    def __apply_modulo_fct(self, modulo_n, idx_fct, fct):
+    def __apply_modulo_fct(self, modulo_n, idx_fct, fct) -> None:
+        """
+        Applies the specified function to the data set with modulo functionality.
+
+        If the specified index of function exists in the dictionary, applies it to the total number of data points with the given context.
+        Otherwise, applies it to the total number of data points without any additional context.
+
+        Args:
+            modulo_n (int): The modulo number for which the function is applied.
+            idx_fct (int): The index of the function to be applied.
+            fct (function): The function to be applied to the data set.
+        """
+
         if self.modulo_functions_dict[modulo_n, idx_fct]:
             fct(idx=self.nb_data_total, context=self.context)
         else:
             fct(idx=self.nb_data_total)
 
-    def __apply_modulos_fct(self):
+    def __apply_modulos_fct(self) -> None:
+        """
+        Applies all modulo functions to the data set based on its size and the given modulo numbers.
+
+        Iterates through each modulo number and checks if the total number of data points is divisible by it.
+        If it is, iterates through each function associated with that modulo number and applies them to the data set using the `__apply_modulo_fct` method.
+        """
+
         for modulo_n in self.functions_modulo:
             if self.nb_data_total % modulo_n == 0:
                 for idx_fct, fct in enumerate(self.functions_modulo[modulo_n], start=1):
@@ -426,6 +517,7 @@ if __name__ == '__main__':
             context (Dict): The initial context.
         """
         context['range_size'] = int(os.environ.get('range_size', 99))
+        context['log_mod'] = 13
         context['nums'] = []
         logger.info("Init range_size to %d" % context['range_size'])
 
@@ -502,7 +594,7 @@ if __name__ == '__main__':
         ],
         continue_if_none=False,
         context=context,
-        log_modulo=13,
+        log_modulo='context:log_mod',
         size_of_set='context:range_size',
         fct_modulo={
             48: call_48,
