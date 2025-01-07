@@ -333,7 +333,7 @@ class Flow:
 
         self.__init_vars()
 
-        logger.debug("Flow: Context is %s" % context)
+        logger.debug("Flow: Context is %s" % self.context)
 
         logger.debug("Flow: Init ends")
 
@@ -565,7 +565,7 @@ if __name__ == '__main__':
             data (Dict): The data to print.
         """
         logger.info("data is: %s" % data)
-        context['nums'].append(data.get('num', None))
+        cur_context['nums'].append(data.get('num', None))
 
     def call_48(idx: int):
         logger.info("CALL_48:%d" % idx)
@@ -579,13 +579,13 @@ if __name__ == '__main__':
     #
     # Run flow
     #
-    nb_data_total: int = 0
-    nb_data_processed: int = 0
-    nb_data_skip: int = 0
-    nb_data_stopped_by_none: int = 0
-    size_of_set: int = 99
-    context: Dict = {}
-    (nb_data_total, nb_data_processed, nb_data_skip, nb_data_stopped_by_none) = Flow(
+    cur_nb_data_total: int = 0
+    cur_nb_data_processed: int = 0
+    cur_nb_data_skip: int = 0
+    cur_nb_data_stopped_by_none: int = 0
+    cur_size_of_set: int = 99
+    cur_context: Dict = {}
+    (cur_nb_data_total, cur_nb_data_processed, cur_nb_data_skip, cur_nb_data_stopped_by_none) = Flow(
         fct_init=[
             init_range_value,
         ],
@@ -595,7 +595,7 @@ if __name__ == '__main__':
             print_data,
         ],
         continue_if_none=False,
-        context=context,
+        context=cur_context,
         log_modulo='context:log_mod',
         size_of_set='context:range_size',
         fct_modulo={
@@ -605,19 +605,19 @@ if __name__ == '__main__':
     ).run()
 
     logger.info("End of flow")
-    logger.info("context is: %s" % context)
+    logger.info("context is: %s" % cur_context)
 
-    if nb_data_total > 0:
+    if cur_nb_data_total > 0:
         logger.info(
             "nb_data_all=%d / nb_data_ok=%d (%3.2f%%) / self.nb_data_skip=%d (%3.2f%%) / nb_data_none=%d (%3.2f%%)" %
             (
-                nb_data_total,
-                nb_data_processed,
-                nb_data_processed * 100 / nb_data_total,
-                nb_data_skip,
-                nb_data_skip * 100 / nb_data_total,
-                nb_data_stopped_by_none,
-                nb_data_stopped_by_none * 100 / nb_data_total
+                cur_nb_data_total,
+                cur_nb_data_processed,
+                cur_nb_data_processed * 100 / cur_nb_data_total,
+                cur_nb_data_skip,
+                cur_nb_data_skip * 100 / cur_nb_data_total,
+                cur_nb_data_stopped_by_none,
+                cur_nb_data_stopped_by_none * 100 / cur_nb_data_total
             )
         )
     else:
