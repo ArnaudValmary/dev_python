@@ -333,8 +333,6 @@ class Flow:
 
         self.__init_vars()
 
-        logger.debug("Flow: Context is %s" % self.context)
-
         logger.debug("Flow: Init ends")
 
         return fct_idx
