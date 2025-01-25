@@ -15,12 +15,24 @@ pyyaml = "6.0.2"
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-flake8 = "==6.0.0"
-autopep8 = "==2.0.2"
-isort = "==5.12.0"
-pytest = "==7.2.2"
-pytest-cov = "==4.0.0"
-pycobertura = "==3.2.1"
+
+# https://flake8.pycqa.org/en/latest/
+flake8 = "==7.1.1"
+
+# https://github.com/hhatto/autopep8/blob/main/README.rst
+autopep8 = "==2.3.2"
+
+# https://pycqa.github.io/isort/
+isort = "==5.13.2"
+
+# https://docs.pytest.org/en/stable/how-to/usage.html
+pytest = "==8.3.4"
+
+# https://coverage.readthedocs.io/en/latest/
+coverage = "==7.6.10"
+
+# pytest-cov = "==4.0.0"
+# pycobertura = "==3.2.1"
 
 [build-system]
 requires = ["poetry-core"]
