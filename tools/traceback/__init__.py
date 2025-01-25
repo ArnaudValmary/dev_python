@@ -3,7 +3,10 @@
 """
 Module for executing functions and tracing back any exceptions.
 
-This module provides a utility function `exec_and_traceback_all_exceptions` that allows you to execute a given function while tracing back any exceptions that occur during execution. The function will return `True` if no exceptions were raised, or the formatted traceback of the last exception encountered.
+This module provides a utility function `exec_and_traceback_all_exceptions` that allows you to execute a given
+    function while tracing back any exceptions that occur during execution.
+    The function will return `True` if no exceptions were raised,
+    or the formatted traceback of the last exception encountered.
 
 Functions
 ----------
@@ -48,9 +51,10 @@ def exec_and_traceback_all_exceptions(fct: Callable, *args, **kwargs) -> Tuple[b
 # The lines below are for illustrative purposes only
 #
 if __name__ == '__main__':
-    def fct1(x) -> None:
-        x: int = x + 1
-        "A" + 1
+    def fct1(x: int) -> None:
+        x += 1
+        #  Error!
+        "A" + x
 
     def fct2(x) -> None:
         fct1(x)
