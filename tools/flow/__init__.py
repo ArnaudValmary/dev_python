@@ -120,6 +120,7 @@ class Flow:
                  fct_init: Optional[Union[Callable, List[Callable]]] = None,
                  fct_load: Optional[Callable] = None,
                  fct_filter: Optional[Union[Callable, List[Callable]]] = None,
+                 fct_finalyze: Optional[Union[Callable, List[Callable]]] = None,
                  fct_modulo: Optional[Dict[int, Union[Callable, List[Callable]]]] = None,
                  continue_if_none: bool = False,
                  ignore_last_filter_return: bool = True,
@@ -133,6 +134,7 @@ class Flow:
             fct_init(Union[Callable, List[Callable]]): The functions to initialize the flow.
             fct_load(Callable): The function to load data from .
             fct_filter(Union[Callable, List[Callable]]): The filters to apply to the data.
+            fct_finalyze(Union[Callable, List[Callable]]): The final functions to apply after all filters on all data.
             continue_if_none(bool, optional): Whether to continue processing if a filter returns None. Defaults to False.
             ignore_last_filter_return(bool, optional): Whether to ignore the return value of the last filter. Defaults to True.
             context(Optional[Dict], optional): The initial context for the flow. Defaults to None.
@@ -146,6 +148,7 @@ class Flow:
         self.continue_if_none: bool = continue_if_none
         self.ignore_last_filter_return: bool = ignore_last_filter_return
         self.flow_functions_nb: int = 0
+        self.flow_functions_final_start: int = 0
         self.modulo_functions_nb: int = 0
         self.modulo_functions_dict: Dict[int, Union[Callable, List[Callable]]] = {}
         self.size_of_set: Optional[Union[int, str]] = self.__get_arg_integer_gt_zero(size_of_set, 'size of set')
@@ -166,6 +169,13 @@ class Flow:
                 self.functions_filter = fct_filter
             else:
                 self.functions_filter = [fct_filter]
+
+        self.functions_finalyze: List[Callable] = None
+        if fct_finalyze:
+            if isinstance(fct_finalyze, list):
+                self.functions_finalyze = fct_finalyze
+            else:
+                self.functions_finalyze = [fct_finalyze]
 
         self.functions_modulo: Optional[Dict[int, Union[Callable, List[Callable]]]] = fct_modulo
 
@@ -235,6 +245,11 @@ class Flow:
 
         if self.functions_filter:
             for fct in self.functions_filter:
+                self.__add_flow_function_in_dict(fct)
+
+        if self.functions_finalyze:
+            self.flow_functions_final_start = self.flow_functions_nb + 1
+            for fct in self.functions_finalyze:
                 self.__add_flow_function_in_dict(fct)
 
         if self.functions_modulo:
@@ -361,6 +376,32 @@ class Flow:
 
         return fct_idx, all_data
 
+    def __apply_finalyze_fct(self, idx_fct, fct) -> None:
+        """
+        Applies the specified finalyze function.
+
+        Args:
+            idx_fct (int): The index of the function to be applied.
+            fct (function): The function to be applied.
+        """
+
+        if self.flow_functions_dict[idx_fct]:
+            fct(context=self.context)
+        else:
+            fct()
+
+    def __apply_finalyzes_fct(self) -> None:
+        """
+        Applies all finalyze functions.
+        """
+
+        logger.debug("Flow: Finalyze starts")
+
+        for idx_fct, fct in enumerate(self.functions_finalyze, start=self.flow_functions_final_start):
+            self.__apply_finalyze_fct(idx_fct, fct)
+
+        logger.debug("Flow: Finalyze ends")
+
     def __log_modulo(self, flag_final: bool = not_final) -> None:
         """
         Logs a message indicating the current state of the data set.
@@ -470,11 +511,13 @@ class Flow:
             Tuple[int, int, int, int]: The final index, total count, processed count, and skipped count.
         """
 
+        output_data: Tuple[int, int, int, int] = (0, 0, 0, 0)
+
         self.__build_function_dicts()
 
         fct_idx: int = 0
         if self.functions_init is None:
-            logger.warning("Flow: No init functions")
+            logger.init("Flow: No init functions")
         else:
             fct_idx = self.__init_flow()
 
@@ -486,9 +529,14 @@ class Flow:
             else:
                 all_data: Generator = None
                 fct_idx, all_data = self.__load_data(fct_idx)
-                return self.__filter_data(fct_idx, all_data)
+                output_data = self.__filter_data(fct_idx, all_data)
 
-        return 0, 0, 0, 0
+        if self.functions_finalyze is None:
+            logger.info("Flow: No finalyze functions")
+        else:
+            self.__apply_finalyzes_fct()
+
+        return output_data
 
 
 #
@@ -565,14 +613,20 @@ if __name__ == '__main__':
         logger.info("data is: %s" % data)
         cur_context['nums'].append(data.get('num', None))
 
-    def call_48(idx: int):
+    def call_48(idx: int) -> None:
         logger.info("CALL_48:%d" % idx)
 
-    def call_49(idx: int, context: Dict):
+    def call_49(idx: int, context: Dict) -> None:
         logger.info("CALL_49:%d (%s)" % (idx, context))
 
-    def call_49BIS(idx: int):
+    def call_49BIS(idx: int) -> None:
         logger.info("CALL_49BIS:%d" % (idx))
+
+    def finalyze_1() -> None:
+        logger.info('Finalyze 1')
+
+    def finalyze_2(context: Dict) -> None:
+        logger.info('Finalyze 2, context=%s' % context)
 
     #
     # Run flow
@@ -591,6 +645,10 @@ if __name__ == '__main__':
         fct_filter=[
             filter_even,
             print_data,
+        ],
+        fct_finalyze=[
+            finalyze_1,
+            finalyze_2,
         ],
         continue_if_none=False,
         context=cur_context,
