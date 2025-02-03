@@ -27,16 +27,20 @@ ifeq ($(is_poetry),yes)
 	cmd_deps_requirements     := $(cmd_deps_tool) export --format=requirements.txt --output=$(requirements_file)
 	cmd_deps_requirements_all := $(cmd_deps_requirements) --with $(opt_deps_groups)
 else ifeq ($(is_pipenv),yes)
-	cmd_deps_tool        := pipenv
-	deps_tool_name       := $(ansi_fg_green)$(ansi_bold)Pipenv$(ansi_norm)
-	deps_tool_version    := $(shell pipenv --version 2>/dev/null | cut -d ' ' -f 3)
+	cmd_deps_tool             := pipenv
+	deps_tool_name            := $(ansi_fg_green)$(ansi_bold)Pipenv$(ansi_norm)
+	deps_tool_version         := $(shell pipenv --version 2>/dev/null | cut -d ' ' -f 3)
 	path_deps_env             := $(shell $(cmd_deps_tool) env info -p)
 	dir_deps_env              := $(lastword $(subst /, ,$(path_deps_env)))
 	opt_deps_groups           := $(shell echo '$(deps_groups)' | sed -e 's/ /,/g')
-	file_env             := Pipfile
-	file_env_lock        := Pipfile.lock
-	cmd_deps_install     := $(cmd_deps_tool) install
-	cmd_deps_install_all := $(cmd_deps_tool) install --dev
+	file_env                  := Pipfile
+	file_env_lock             := Pipfile.lock
+	cmd_deps_install          := $(cmd_deps_tool) install
+	cmd_deps_install_all      := $(cmd_deps_tool) install --dev
+	cmd_deps_graph            := $(cmd_deps_tool) graph
+	cmd_deps_graph_all        := $(cmd_deps_graph)
+	cmd_deps_requirements     := $(cmd_deps_tool) requirements
+	cmd_deps_requirements_all := $(cmd_deps_requirements)
 endif
 
 cmd_deps_run := $(cmd_deps_tool) run
