@@ -33,7 +33,8 @@ def __flat(d: Dict,
            rename_list: Dict[str, str] = None,
            filter_values: Dict[str, Callable] = None,
            drop_values: List[str] = None,
-           drop_objects: List[str] = None) -> None:
+           drop_objects: List[str] = None,
+           use_nested: bool = True) -> None:
 
     if snakecase_fieldnames:
         fieldname_prefix = str_2_snakecase(fieldname_prefix)
@@ -66,7 +67,7 @@ def __flat(d: Dict,
 
         field_value: Any = d[field_name]
 
-        if isinstance(field_value, dict):
+        if use_nested and isinstance(field_value, dict):
             if not drop_objects or field_name not in drop_objects:
                 __flat(field_value,
                        flatten_dict,
@@ -81,8 +82,11 @@ def __flat(d: Dict,
                        rename_list=rename_list,
                        filter_values=filter_values,
                        drop_values=drop_values,
-                       drop_objects=drop_objects)
-        elif isinstance(field_value, list) or isinstance(field_value, tuple):
+                       drop_objects=drop_objects,
+                       use_nested=use_nested)
+        elif isinstance(field_value, list) or isinstance(field_value, tuple) or not use_nested and isinstance(field_value, dict):
+            if isinstance(field_value, dict):
+                field_value = [field_value]
             if not drop_objects or field_name not in drop_objects:
                 if len(field_value) > 0 and isinstance(field_value[0], dict):
                     for elt in field_value:
@@ -99,7 +103,8 @@ def __flat(d: Dict,
                                rename_list=rename_list,
                                filter_values=filter_values,
                                drop_values=drop_values,
-                               drop_objects=drop_objects)
+                               drop_objects=drop_objects,
+                               use_nested=use_nested)
                 else:
                     field_value_bis: List = []
                     for elt in field_value:
@@ -118,7 +123,8 @@ def __flat(d: Dict,
                                rename_list=rename_list,
                                filter_values=filter_values,
                                drop_values=drop_values,
-                               drop_objects=drop_objects)
+                               drop_objects=drop_objects,
+                               use_nested=use_nested)
 
         else:
             if not drop_values or field_name_value not in drop_values:
@@ -141,7 +147,8 @@ def flat(d: Dict,
          rename_list: Dict[str, str] = None,
          filter_values: Dict[str, Callable] = None,
          drop_values: List[str] = None,
-         drop_objects: List[str] = None) -> Dict[str, List[Dict[str, Any]]]:
+         drop_objects: List[str] = None,
+         use_nested: bool = True) -> Dict[str, List[Dict[str, Any]]]:
     flatten_dict: Dict = {}
     __flat(
         d=d,
@@ -155,7 +162,8 @@ def flat(d: Dict,
         rename_list=rename_list,
         filter_values=filter_values,
         drop_values=drop_values,
-        drop_objects=drop_objects
+        drop_objects=drop_objects,
+        use_nested=use_nested
     )
     return flatten_dict
 
@@ -170,53 +178,32 @@ if __name__ == '__main__':
         return datetime.datetime.strptime(value, '%d/%m/%Y %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%S')
 
     d: Dict = {
-        "A": 1,
-        "b": 2,
-        "c": {"EDa": 3, "e": 4, },
-        'd': {"1": "a", "2": "b"},
-        "L": [
-            {
-                "A": 1,
-                "B": 1,
-            },
-            {
-                "AA": 1,
-                "BB": [1, 2, 3]
-            },
-        ],
-        "M": [
-            "MX"
-        ],
-        "tuple": (1, 2, 3),
-        "date": "09/02/2024 21:01:32"
+        "name": "John",
+        "age": 30,
+        "address": {
+            "street": "123 Main St",
+            "city": "Anytown",
+            "state": "CA"
+        },
+        "address2": {
+            "street": "125 Main St",
+            "city": "Anytown",
+            "state": "CA"
+        },
+        "phone_numbers": [
+            {"type": "home", "number": "555-1234"},
+            {"type": "work", "number": "555-5678"}
+        ]
     }
 
     print(
         json.dumps(
             flat(d,
-                 flat_dict_key='pRefix',
-                 snakecase_fieldnames=True,
-                 sep='_',
-                 rename_values={
-                     'm': 'x',
-                     'b_b': 'b__bb',
-                     'a': 'the_a',
-                     'c_e_da': 'the_ceda',
-                 },
-                 rename_list={
-                     'l': "the_l",
-                     'p_refix': 'prefix',
-                 },
-                 filter_values={
-                     'date': fix_date,
-                 },
-                 drop_values=[
-                     'c_e',
-                 ],
+                 flat_dict_key='person',
+                 use_nested=False,
                  drop_objects=[
-                     'd',
-                 ]
-                 ),
+                     'address2',
+                 ]),
             indent=2
         )
     )
